@@ -1,0 +1,20 @@
+Power Automate Intern Job Description
+
+We are looking for a Power Automate Intern with interest in workflow automation,
+Microsoft Power Platform, and AI integration.
+
+Required Skills:
+- Basic understanding of Microsoft Power Automate
+- Knowledge of Power Apps and Dataverse (preferred)
+- Experience with automation workflows
+- Understanding of REST APIs and connectors
+- Interest in AI models, Azure OpenAI, or LLMs
+- Basic Python or scripting knowledge
+- Good problem-solving skills
+
+Responsibilities:
+- Build and optimize Power Automate workflows
+- Integrate automation with AI services
+- Assist in building RPA and intelligent automation solutions
+- Work with data sources like SharePoint, Dataverse, APIs
+- Document workflows and automation logic

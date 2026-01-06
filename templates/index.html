@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Parser - AI Candidate Evaluator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .upload-section {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        .upload-section:hover {
+            border-color: #667eea;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .resume-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .resume-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .resume-info {
+            flex-grow: 1;
+        }
+        .resume-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-small {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .btn-small:hover {
+            background: #5a6fd8;
+        }
+        .btn-evaluate {
+            background: #28a745;
+        }
+        .btn-evaluate:hover {
+            background: #218838;
+        }
+        .result-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .rag-config {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .config-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .config-row label {
+            min-width: 150px;
+            font-weight: 500;
+        }
+        .config-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-size: 14px;
+        }
+        .config-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+        .rag-info {
+            background: #e3f2fd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Resume Parser & Candidate Evaluator</h1>
+            <p>Upload resumes and get AI-powered candidate evaluations</p>
+        </div>
+
+        <div class="card">
+            <h2>⚙️ RAG Configuration</h2>
+            <div class="rag-config">
+                <div class="config-row">
+                    <label for="strategy">Retrieval Strategy:</label>
+                    <select id="strategy" class="config-select">
+                        <option value="hybrid">Hybrid (MMR + Query Expansion)</option>
+                        <option value="similarity">Similarity Search</option>
+                        <option value="mmr">MMR (Maximal Marginal Relevance)</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label for="kValue">Documents to Retrieve (K):</label>
+                    <select id="kValue" class="config-select">
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4" selected>4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <div class="config-row">
+                    <label for="queryExpansion">
+                        <input type="checkbox" id="queryExpansion" checked> Query Expansion
+                    </label>
+                </div>
+                <div class="config-info">
+                    <small>
+                        <strong>Strategy Info:</strong><br>
+                        • <strong>Similarity:</strong> Basic semantic search<br>
+                        • <strong>MMR:</strong> Balances relevance and diversity<br>
+                        • <strong>Hybrid:</strong> MMR + Query Expansion (recommended)
+                    </small>
+                </div>
+            </div>
+        </div>
+            <div class="upload-section">
+                <p>Drag and drop a PDF or TXT resume file here, or click to browse</p>
+                <input type="file" id="fileInput" accept=".pdf,.txt" style="display: none;">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                <p id="fileName">No file selected</p>
+                <button class="btn" id="uploadBtn" onclick="uploadFile()" disabled>Upload Resume</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Uploaded Resumes</h2>
+            <button class="btn" onclick="loadResumes()">Refresh List</button>
+            <div id="resumeList" class="resume-list">
+                <!-- Resumes will be loaded here -->
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🎯 Evaluate Candidates</h2>
+            <p>Upload a resume above to automatically evaluate it, or click individual "Evaluate" buttons below, or evaluate all at once:</p>
+            <button class="btn" onclick="evaluateCandidates()">Evaluate All Resumes</button>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Evaluating candidates... This may take a moment.</p>
+            </div>
+            <div id="results" class="result-section" style="display: none;">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            selectedFile = e.target.files[0];
+            document.getElementById('fileName').textContent = selectedFile ? selectedFile.name : 'No file selected';
+            document.getElementById('uploadBtn').disabled = !selectedFile;
+        });
+
+        function uploadFile() {
+            if (!selectedFile) return;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert('✅ ' + data.message);
+                    loadResumes();
+                    selectedFile = null;
+                    document.getElementById('fileInput').value = '';
+                    document.getElementById('fileName').textContent = 'No file selected';
+                    document.getElementById('uploadBtn').disabled = true;
+
+                    // Automatically evaluate the newly uploaded resume
+                    setTimeout(() => {
+                        evaluateSingleResume(data.filename);
+                    }, 1000); // Small delay to ensure ingestion is complete
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Upload failed');
+            });
+        }
+
+        function loadResumes() {
+            fetch('/resumes')
+            .then(response => response.json())
+            .then(resumes => {
+                const resumeList = document.getElementById('resumeList');
+                if (resumes.length === 0) {
+                    resumeList.innerHTML = '<p>No resumes uploaded yet.</p>';
+                } else {
+                    resumeList.innerHTML = resumes.map(resume =>
+                        `<div class="resume-item">
+                            <div class="resume-info">
+                                <strong>${resume}</strong>
+                            </div>
+                            <div class="resume-actions">
+                                <button class="btn-small btn-evaluate" onclick="evaluateSingleResume('${resume}')">
+                                    🤖 Evaluate
+                                </button>
+                            </div>
+                        </div>`
+                    ).join('');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading resumes:', error);
+            });
+        }
+
+        function getRAGParams() {
+            return {
+                strategy: document.getElementById('strategy').value,
+                k: document.getElementById('kValue').value,
+                expansion: document.getElementById('queryExpansion').checked
+            };
+        }
+
+        function evaluateSingleResume(filename) {
+            const params = getRAGParams();
+
+            // Show loading in the results section
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('results').innerHTML = '';
+
+            fetch(`/evaluate/${encodeURIComponent(filename)}?strategy=${params.strategy}&k=${params.k}&expansion=${params.expansion}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.result) {
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('results').innerHTML = `
+                        <h3>🎯 RAG Evaluation Results for: ${data.filename}</h3>
+                        <div class="rag-info">
+                            <strong>Strategy:</strong> ${data.strategy} |
+                            <strong>Documents:</strong> ${data.k} |
+                            <strong>Query Expansion:</strong> ${data.expansion ? 'Yes' : 'No'}
+                        </div>
+                        <pre>${data.result}</pre>
+                    `;
+                    // Scroll to results
+                    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                console.error('Error:', error);
+                alert('❌ Evaluation failed');
+            });
+        }
+
+        function evaluateCandidates() {
+            const params = getRAGParams();
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+
+            fetch(`/evaluate?strategy=${params.strategy}&k=${params.k}&expansion=${params.expansion}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                if (data.result) {
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('results').innerHTML = `
+                        <h3>🎯 RAG Evaluation Results (All Resumes)</h3>
+                        <div class="rag-info">
+                            <strong>Strategy:</strong> ${data.strategy} |
+                            <strong>Documents:</strong> ${data.k} |
+                            <strong>Query Expansion:</strong> ${params.expansion ? 'Yes' : 'No'}
+                        </div>
+                        <pre>${data.result}</pre>
+                    `;
+                } else {
+                    alert('❌ ' + data.error);
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                console.error('Error:', error);
+                alert('❌ Evaluation failed');
+            });
+        }
+
+        // Load resumes on page load
+        loadResumes();
+    </script>
+</body>
+</html>
