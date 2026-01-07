@@ -4,14 +4,14 @@ A web-based application that uses AI (Ollama + Llama3) with advanced Retrieval-A
 
 ## Features
 
-- 📤 Upload PDF/TXT resumes with automatic parsing
-- 🤖 **Advanced RAG System** with multiple retrieval strategies (Similarity, MMR, Hybrid)
-- 📊 Skill matching and rating (0-10) for each resume
-- 🎯 **RAG Strategies**: Similarity, MMR, Hybrid with Query Expansion
-- 🔍 **Query Expansion** for better retrieval
-- 🎨 **Configurable K** (documents to retrieve)
-- 🌐 Web-based interface with modern UI
-- 📋 Resume management with individual evaluation options
+-  Upload PDF/TXT resumes with automatic parsing
+-  **Advanced RAG System** with multiple retrieval strategies (Similarity, MMR, Hybrid)
+-  Skill matching and rating (0-10) for each resume
+-  **RAG Strategies**: Similarity, MMR, Hybrid with Query Expansion
+-  **Query Expansion** for better retrieval
+-  **Configurable K** (documents to retrieve)
+-  Web-based interface with modern UI
+-  Resume management with individual evaluation options
 
 ## Prerequisites
 
