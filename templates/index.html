@@ -208,7 +208,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🤖 AI Resume Parser & Candidate Evaluator</h1>
+            <h1>AI Resume Parser & Candidate Evaluator</h1>
             <p>Upload resumes and get AI-powered candidate evaluations</p>
         </div>
 
@@ -223,7 +223,7 @@
         </div>
 
         <div class="card">
-            <h2>📋 Uploaded Resumes</h2>
+            <h2>Uploaded Resumes</h2>
             <button class="btn" onclick="loadResumes()">Refresh List</button>
             <div id="resumeList" class="resume-list">
                 <!-- Resumes will be loaded here -->
@@ -231,7 +231,7 @@
         </div>
 
         <div class="card">
-            <h2>🎯 Evaluate Candidates</h2>
+            <h2>Evaluate Candidates</h2>
             <p>Upload a resume above to automatically evaluate it, or click individual "Evaluate" buttons below, or evaluate all at once:</p>
             <button class="btn" onclick="evaluateCandidates()">Evaluate All Resumes</button>
             <div class="loading" id="loading">
@@ -244,7 +244,7 @@
         </div>
 
         <div class="card">
-            <h2>💬 Chat with Resume</h2>
+            <h2>Chat with Resume</h2>
             <p>Select a resume and ask questions about it.</p>
             <div class="config-row">
                 <label for="chatResumeSelect">Select Resume:</label>
@@ -330,7 +330,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.message) {
-                    alert('✅ ' + data.message);
+                    alert(data.message);
                     loadResumes();
                     selectedFile = null;
                     document.getElementById('fileInput').value = '';
@@ -342,12 +342,12 @@
                         evaluateSingleResume(data.filename);
                     }, 3000); // Increased delay to ensure ingestion is complete
                 } else {
-                    alert('❌ ' + data.error);
+                    alert(data.error);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('❌ Upload failed');
+                alert('Upload failed');
             });
         }
 
@@ -368,7 +368,7 @@
                             </div>
                             <div class="resume-actions">
                                 <button class="btn-small btn-evaluate" onclick="evaluateSingleResume('${resume}')">
-                                    🤖 Evaluate
+                                    Evaluate
                                 </button>
                             </div>
                         </div>`
@@ -433,7 +433,7 @@
                 if (data.result) {
                     document.getElementById('results').style.display = 'block';
                     document.getElementById('results').innerHTML = `
-                        <h3>🎯 RAG Evaluation Results for: ${data.filename}</h3>
+                        <h3>RAG Evaluation Results for: ${data.filename}</h3>
                         <div class="rag-info">
                             <strong>Strategy:</strong> ${data.strategy} |
                             <strong>Documents:</strong> ${data.k} |
@@ -444,13 +444,13 @@
                     // Scroll to results
                     document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
                 } else {
-                    alert('❌ ' + data.error);
+                    alert(data.error);
                 }
             })
             .catch(error => {
                 document.getElementById('loading').style.display = 'none';
                 console.error('Error:', error);
-                alert('❌ Evaluation failed');
+                alert('Evaluation failed');
             });
         }
 
@@ -467,7 +467,7 @@
                 if (data.result) {
                     document.getElementById('results').style.display = 'block';
                     document.getElementById('results').innerHTML = `
-                        <h3>🎯 RAG Evaluation Results (All Resumes)</h3>
+                        <h3>RAG Evaluation Results (All Resumes)</h3>
                         <div class="rag-info">
                             <strong>Strategy:</strong> ${data.strategy} |
                             <strong>Documents:</strong> ${data.k} |
@@ -476,13 +476,13 @@
                         <pre>${data.result}</pre>
                     `;
                 } else {
-                    alert('❌ ' + data.error);
+                    alert(data.error);
                 }
             })
             .catch(error => {
                 document.getElementById('loading').style.display = 'none';
                 console.error('Error:', error);
-                alert('❌ Evaluation failed');
+                alert('Evaluation failed');
             });
         }
 
