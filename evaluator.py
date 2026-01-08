@@ -7,7 +7,7 @@ VECTOR_DIR = "vector_store"
 class AdvancedRAG:
     def __init__(self):
         self.embeddings = OllamaEmbeddings(model="nomic-embed-text")
-        self.llm = OllamaLLM(model="llama3", temperature=0.2)
+        self.llm = OllamaLLM(model="llama3.2", temperature=0.2)
 
     def load_vectorstore(self):
         """Load the FAISS vector store"""
@@ -107,12 +107,22 @@ class AdvancedRAG:
 
         return sorted_docs
 
-    def evaluate_with_rag(self, strategy="hybrid", k=4, use_query_expansion=True):
-        """Main RAG evaluation function"""
-        print(f"🤖 Advanced RAG Evaluation (Strategy: {strategy}, K: {k})...")
+    def evaluate_single_resume(self, filename, strategy="hybrid", k=4, use_query_expansion=True):
+        """Evaluate a specific resume using RAG"""
+        print(f"🤖 Evaluating single resume: {filename} (Strategy: {strategy}, K: {k})...")
 
         vectorstore = self.load_vectorstore()
-        retriever = self.create_advanced_retriever(vectorstore, strategy, k)
+        
+        # Filter documents by source filename
+        all_docs = vectorstore.docstore._dict.values()
+        filtered_docs = [doc for doc in all_docs if doc.metadata.get('source') == filename]
+        
+        if not filtered_docs:
+            return f"❌ No content found for resume: {filename}"
+
+        # Create a temporary vectorstore from filtered docs
+        temp_vectorstore = FAISS.from_documents(filtered_docs, self.embeddings)
+        retriever = self.create_advanced_retriever(temp_vectorstore, strategy, k)
 
         with open("job_description.txt", "r", encoding="utf-8") as f:
             job_description = f.read()

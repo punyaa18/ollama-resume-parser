@@ -79,6 +79,7 @@
         .resume-actions {
             display: flex;
             gap: 10px;
+            margin-left: auto;
         }
         .btn-small {
             background: #667eea;
@@ -162,6 +163,46 @@
             font-size: 14px;
             color: #1565c0;
         }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .card {
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+            .upload-section {
+                padding: 30px 20px;
+            }
+            .resume-list {
+                grid-template-columns: 1fr;
+            }
+            .config-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 5px;
+            }
+            .config-row label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+            .btn, .btn-small {
+                width: 100%;
+                margin: 5px 0;
+            }
+            .resume-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .resume-actions {
+                margin-top: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -171,44 +212,7 @@
             <p>Upload resumes and get AI-powered candidate evaluations</p>
         </div>
 
-        <div class="card">
-            <h2>⚙️ RAG Configuration</h2>
-            <div class="rag-config">
-                <div class="config-row">
-                    <label for="strategy">Retrieval Strategy:</label>
-                    <select id="strategy" class="config-select">
-                        <option value="hybrid">Hybrid (MMR + Query Expansion)</option>
-                        <option value="similarity">Similarity Search</option>
-                        <option value="mmr">MMR (Maximal Marginal Relevance)</option>
-                    </select>
-                </div>
-                <div class="config-row">
-                    <label for="kValue">Documents to Retrieve (K):</label>
-                    <select id="kValue" class="config-select">
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4" selected>4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="8">8</option>
-                        <option value="10">10</option>
-                    </select>
-                </div>
-                <div class="config-row">
-                    <label for="queryExpansion">
-                        <input type="checkbox" id="queryExpansion" checked> Query Expansion
-                    </label>
-                </div>
-                <div class="config-info">
-                    <small>
-                        <strong>Strategy Info:</strong><br>
-                        • <strong>Similarity:</strong> Basic semantic search<br>
-                        • <strong>MMR:</strong> Balances relevance and diversity<br>
-                        • <strong>Hybrid:</strong> MMR + Query Expansion (recommended)
-                    </small>
-                </div>
-            </div>
-        </div>
+
             <div class="upload-section">
                 <p>Drag and drop a PDF or TXT resume file here, or click to browse</p>
                 <input type="file" id="fileInput" accept=".pdf,.txt" style="display: none;">
@@ -238,15 +242,79 @@
                 <!-- Results will be displayed here -->
             </div>
         </div>
+
+        <div class="card">
+            <h2>💬 Chat with Resume</h2>
+            <p>Select a resume and ask questions about it.</p>
+            <div class="config-row">
+                <label for="chatResumeSelect">Select Resume:</label>
+                <select id="chatResumeSelect" class="config-select">
+                    <option value="">Select a resume</option>
+                </select>
+            </div>
+            <div class="config-row">
+                <input type="text" id="chatQuestion" placeholder="Ask a question about the selected resume" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <button class="btn-small" onclick="sendQuestion()">Ask</button>
+            </div>
+            <div id="chatHistory" class="result-section" style="display: none; max-height: 300px;">
+                <!-- Chat history here -->
+            </div>
+        </div>
     </div>
 
     <script>
         let selectedFile = null;
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
-            selectedFile = e.target.files[0];
-            document.getElementById('fileName').textContent = selectedFile ? selectedFile.name : 'No file selected';
-            document.getElementById('uploadBtn').disabled = !selectedFile;
+            const file = e.target.files[0];
+            if (file) {
+                const allowedTypes = ['application/pdf', 'text/plain'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a PDF or TXT file only.');
+                    selectedFile = null;
+                    document.getElementById('fileName').textContent = 'No file selected';
+                    document.getElementById('uploadBtn').disabled = true;
+                    e.target.value = '';
+                    return;
+                }
+                selectedFile = file;
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('uploadBtn').disabled = false;
+            } else {
+                selectedFile = null;
+                document.getElementById('fileName').textContent = 'No file selected';
+                document.getElementById('uploadBtn').disabled = true;
+            }
+        });
+
+        // Drag and drop functionality
+        const uploadSection = document.querySelector('.upload-section');
+        uploadSection.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadSection.style.borderColor = '#667eea';
+        });
+        uploadSection.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadSection.style.borderColor = '#ddd';
+        });
+        uploadSection.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadSection.style.borderColor = '#ddd';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                const allowedTypes = ['application/pdf', 'text/plain'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a PDF or TXT file only.');
+                    selectedFile = null;
+                    document.getElementById('fileName').textContent = 'No file selected';
+                    document.getElementById('uploadBtn').disabled = true;
+                    return;
+                }
+                selectedFile = file;
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('uploadBtn').disabled = false;
+            }
         });
 
         function uploadFile() {
@@ -272,7 +340,7 @@
                     // Automatically evaluate the newly uploaded resume
                     setTimeout(() => {
                         evaluateSingleResume(data.filename);
-                    }, 1000); // Small delay to ensure ingestion is complete
+                    }, 3000); // Increased delay to ensure ingestion is complete
                 } else {
                     alert('❌ ' + data.error);
                 }
@@ -288,6 +356,8 @@
             .then(response => response.json())
             .then(resumes => {
                 const resumeList = document.getElementById('resumeList');
+                const select = document.getElementById('chatResumeSelect');
+                select.innerHTML = '<option value="">Select a resume</option>';
                 if (resumes.length === 0) {
                     resumeList.innerHTML = '<p>No resumes uploaded yet.</p>';
                 } else {
@@ -303,6 +373,9 @@
                             </div>
                         </div>`
                     ).join('');
+                    resumes.forEach(resume => {
+                        select.innerHTML += `<option value="${resume}">${resume}</option>`;
+                    });
                 }
             })
             .catch(error => {
@@ -310,23 +383,48 @@
             });
         }
 
-        function getRAGParams() {
-            return {
-                strategy: document.getElementById('strategy').value,
-                k: document.getElementById('kValue').value,
-                expansion: document.getElementById('queryExpansion').checked
-            };
+        function sendQuestion() {
+            const resume = document.getElementById('chatResumeSelect').value;
+            const question = document.getElementById('chatQuestion').value.trim();
+            if (!resume) {
+                alert('Please select a resume.');
+                return;
+            }
+            if (!question) {
+                alert('Please enter a question.');
+                return;
+            }
+
+            fetch('/query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resume, question })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                } else {
+                    const history = document.getElementById('chatHistory');
+                    history.style.display = 'block';
+                    history.innerHTML += `<p><strong>You:</strong> ${question}</p><p><strong>AI:</strong> ${data.answer}</p><hr>`;
+                    document.getElementById('chatQuestion').value = '';
+                    history.scrollTop = history.scrollHeight;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to send question.');
+            });
         }
 
         function evaluateSingleResume(filename) {
-            const params = getRAGParams();
-
             // Show loading in the results section
             document.getElementById('loading').style.display = 'block';
             document.getElementById('results').style.display = 'none';
             document.getElementById('results').innerHTML = '';
 
-            fetch(`/evaluate/${encodeURIComponent(filename)}?strategy=${params.strategy}&k=${params.k}&expansion=${params.expansion}`, {
+            fetch(`/evaluate/${encodeURIComponent(filename)}?strategy=hybrid&k=2&expansion=false`, {
                 method: 'POST'
             })
             .then(response => response.json())
@@ -357,12 +455,10 @@
         }
 
         function evaluateCandidates() {
-            const params = getRAGParams();
-
             document.getElementById('loading').style.display = 'block';
             document.getElementById('results').style.display = 'none';
 
-            fetch(`/evaluate?strategy=${params.strategy}&k=${params.k}&expansion=${params.expansion}`, {
+            fetch(`/evaluate?strategy=hybrid&k=2&expansion=false`, {
                 method: 'POST'
             })
             .then(response => response.json())
@@ -375,7 +471,7 @@
                         <div class="rag-info">
                             <strong>Strategy:</strong> ${data.strategy} |
                             <strong>Documents:</strong> ${data.k} |
-                            <strong>Query Expansion:</strong> ${params.expansion ? 'Yes' : 'No'}
+                            <strong>Query Expansion:</strong> No
                         </div>
                         <pre>${data.result}</pre>
                     `;

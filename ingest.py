@@ -15,11 +15,17 @@ def ingest_resumes():
 
         if file.endswith(".pdf"):
             loader = PyPDFLoader(path)
-            documents.extend(loader.load())
+            docs = loader.load()
+            for doc in docs:
+                doc.metadata['source'] = file
+            documents.extend(docs)
 
         elif file.endswith(".txt"):
             loader = TextLoader(path)
-            documents.extend(loader.load())
+            docs = loader.load()
+            for doc in docs:
+                doc.metadata['source'] = file
+            documents.extend(docs)
 
     if not documents:
         print("⚠️ No resumes found")

@@ -28,13 +28,18 @@ def upload_file():
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(file_path):
+            return jsonify({'error': 'A file with this name already exists'}), 400
         file.save(file_path)
 
         # Re-ingest resumes after upload
-        ingest.ingest_resumes()
+        try:
+            ingest.ingest_resumes()
+        except Exception as e:
+            return jsonify({'error': f'Failed to process resume: {str(e)}'}), 500
 
         return jsonify({'message': 'File uploaded successfully', 'filename': filename}), 200
-    return jsonify({'error': 'File type not allowed'}), 400
+    return jsonify({'error': 'File type not allowed. Only PDF and TXT files are accepted.'}), 400
 
 @app.route('/rag-config', methods=['GET'])
 def get_rag_config():
@@ -67,8 +72,8 @@ def evaluate_single(filename):
         use_expansion = request.args.get('expansion', 'true').lower() == 'true'
 
         rag = evaluator.AdvancedRAG()
-        result = rag.evaluate_with_rag(strategy=strategy, k=k, use_query_expansion=use_expansion)
-        return jsonify({'result': result, 'filename': filename, 'strategy': strategy, 'k': k}), 200
+        result = rag.evaluate_single_resume(filename, strategy=strategy, k=k, use_query_expansion=use_expansion)
+        return jsonify({'result': result, 'filename': filename, 'strategy': strategy, 'k': k, 'expansion': use_expansion}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -82,13 +87,47 @@ def evaluate():
 
         rag = evaluator.AdvancedRAG()
         result = rag.evaluate_with_rag(strategy=strategy, k=k, use_query_expansion=use_expansion)
-        return jsonify({'result': result, 'strategy': strategy, 'k': k}), 200
+        return jsonify({'result': result, 'strategy': strategy, 'k': k, 'expansion': use_expansion}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/static/<path:path>')
 def send_static(path):
     return send_from_directory('static', path)
+
+@app.route('/resumes')
+def list_resumes():
+    try:
+        files = os.listdir(UPLOAD_FOLDER)
+        # Filter for allowed extensions
+        resumes = [f for f in files if allowed_file(f)]
+        return jsonify(resumes)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/query', methods=['POST'])
+def query_resume():
+    try:
+        data = request.json
+        resume = data.get('resume')
+        question = data.get('question')
+        if not resume or not question:
+            return jsonify({'error': 'Resume and question required'}), 400
+
+        rag = evaluator.AdvancedRAG()
+        vectorstore = rag.load_vectorstore()
+        docs = vectorstore.similarity_search(question, filter={'source': resume}, k=6)
+        print(f"Query: {question}, Resume: {resume}, Docs found: {len(docs)}")
+
+        context = "\n".join([doc.page_content for doc in docs])
+        prompt = f"Answer the question using only the provided resume content. If the information is not in the resume, say 'The resume does not contain this information.'\n\nQuestion: {question}\n\nResume Content:\n{context}"
+        answer = rag.llm.invoke(prompt)
+        print(f"Answer: {answer[:100]}...")
+
+        return jsonify({'answer': answer, 'sources': [doc.metadata for doc in docs]}), 200
+    except Exception as e:
+        print(f"Error in query: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
