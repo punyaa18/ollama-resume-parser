@@ -1,4 +1,5 @@
 # AI Resume Parser & Candidate Evaluator with Advanced RAG
+<img width="1358" height="723" alt="image" src="https://github.com/user-attachments/assets/76bf310d-fd2e-41ec-9146-f2897115a149" />
 
 A web-based application that uses AI (Ollama + Llama3) with advanced Retrieval-Augmented Generation (RAG) to parse resumes and evaluate candidates against job descriptions.
 
