@@ -125,3 +125,7 @@ All evaluation endpoints support these query parameters:
 - **Vector DB**: FAISS
 - **Frontend**: HTML, CSS, JavaScript
 - **Document Processing**: LangChain, PyPDF
+## refer to 
+- ollama is honestly amazing , so to know more about it, read it here 
+- https://blogs.perficient.com/2025/08/01/build-run-and-integrate-your-own-llm-with-ollama/
+- https://blogs.perficient.com/2025/07/30/ollama-power-automate-integration/
